@@ -1,26 +1,46 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import { DUMMY_DATA } from './dummyData';
+import RecipeList from './components/RecipeList';
+import SearchBar from './components/SearchBar';
+import RecipeDetail from './components/RecipeDetail';
+import Recipe from './components/Recipe';
+import { Link, Router } from '@reach/router';
+import { connect } from 'react-redux';
+import { setRecipes, searchRecipe } from './store/recipeActions';
+import { Spinner } from 'react-bootstrap';
 
-function App() {
+const App = (props) => {
+  const [loading, setLoading] = useState(false);
+  const [recipesLocal, setRecipesLocal] = useState(props.recipes);
+
+  useEffect(() => {
+    props.setRecipes(setLoading);
+  }, [setLoading]);
+
+  useEffect(() => {
+    setRecipesLocal(props.recipes);
+  }, [props.recipes]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container mt-3 mb-3">
+      {loading && <Spinner />}
+      <SearchBar
+        onSearch={(term) => {
+          setRecipesLocal(searchRecipe(props.recipes, term));
+        }}
+      />
+      {!loading && (
+        <Router>
+          <RecipeList path="/" recipes={recipesLocal} />
+          <RecipeDetail path="/details/:id" />
+        </Router>
+      )}
     </div>
   );
-}
+};
 
-export default App;
+const mapStateToProps = (state) => ({
+  recipes: state.recipe.recipes,
+});
+
+export default connect(mapStateToProps, { setRecipes })(App);
